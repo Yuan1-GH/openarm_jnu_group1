@@ -1,0 +1,176 @@
+[0.025s] Invoking command in '/home/yuan/arm_ws/build/openarm_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake /home/yuan/arm_ws/src/openarm_description -DCMAKE_INSTALL_PREFIX=/home/yuan/arm_ws/install/openarm_description
+[0.336s] -- The C compiler identification is GNU 11.4.0
+[1.406s] -- The CXX compiler identification is GNU 11.4.0
+[2.176s] -- Detecting C compiler ABI info
+[2.481s] -- Detecting C compiler ABI info - done
+[2.486s] -- Check for working C compiler: /usr/bin/cc - skipped
+[2.486s] -- Detecting C compile features
+[2.486s] -- Detecting C compile features - done
+[2.489s] -- Detecting CXX compiler ABI info
+[2.806s] -- Detecting CXX compiler ABI info - done
+[2.811s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[2.811s] -- Detecting CXX compile features
+[2.811s] -- Detecting CXX compile features - done
+[2.815s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[2.942s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[3.039s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[3.123s] -- Added test 'flake8' to check Python code syntax and style conventions
+[3.126s] -- Added test 'lint_cmake' to check CMake code style
+[3.129s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[3.140s] -- Added test 'xmllint' to check XML markup files
+[3.143s] -- Configuring done
+[3.149s] -- Generating done
+[3.150s] -- Build files have been written to: /home/yuan/arm_ws/build/openarm_description
+[3.155s] Invoked command in '/home/yuan/arm_ws/build/openarm_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake /home/yuan/arm_ws/src/openarm_description -DCMAKE_INSTALL_PREFIX=/home/yuan/arm_ws/install/openarm_description
+[3.157s] Invoking command in '/home/yuan/arm_ws/build/openarm_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake --build /home/yuan/arm_ws/build/openarm_description -- -j24 -l24
+[3.198s] Invoked command in '/home/yuan/arm_ws/build/openarm_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake --build /home/yuan/arm_ws/build/openarm_description -- -j24 -l24
+[3.200s] Invoking command in '/home/yuan/arm_ws/build/openarm_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake --install /home/yuan/arm_ws/build/openarm_description
+[3.208s] -- Install configuration: ""
+[3.208s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/launch
+[3.210s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/launch/display_openarm.launch.py
+[3.211s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes
+[3.211s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm
+[3.211s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10
+[3.211s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual
+[3.212s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link0.dae
+[3.216s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link4.dae
+[3.226s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link5.dae
+[3.243s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link6.dae
+[3.257s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link7.dae
+[3.272s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link4.stl
+[3.284s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link6.stl
+[3.295s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link7.stl
+[3.306s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link2.dae
+[3.321s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link2.stl
+[3.332s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link3.stl
+[3.344s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link3.dae
+[3.359s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link1.stl
+[3.372s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link5.stl
+[3.389s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link0.stl
+[3.399s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link1.dae
+[3.417s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision
+[3.418s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link6_symp.stl
+[3.418s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link2_symp.stl
+[3.418s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link7_symp.stl
+[3.419s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link5_symp.stl
+[3.420s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link4_symp.stl
+[3.423s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link3_symp.stl
+[3.424s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link1_symp.stl
+[3.424s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link0_symp.stl
+[3.424s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee
+[3.425s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand
+[3.425s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual
+[3.425s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/hand.dae
+[3.429s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/finger.stl
+[3.430s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/finger.dae
+[3.444s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision
+[3.444s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision/hand.stl
+[3.444s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision/finger.stl
+[3.445s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body
+[3.445s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10
+[3.445s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual
+[3.446s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual/body_link0.stl
+[3.464s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual/body_link0.dae
+[3.488s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/collision
+[3.489s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/collision/body_link0_symp.stl
+[3.490s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/rviz
+[3.490s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/rviz/arm_only.rviz
+[3.491s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/rviz/bimanual.rviz
+[3.491s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf
+[3.491s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/arm
+[3.491s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/arm/openarm_macro.xacro
+[3.492s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/arm/openarm_arm.xacro
+[3.492s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ros2_control
+[3.492s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ros2_control/openarm.bimanual.ros2_control.xacro
+[3.492s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ros2_control/openarm.ros2_control.xacro
+[3.493s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee
+[3.493s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/ee_with_one_link.xacro
+[3.493s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/openarm_hand_macro.xacro
+[3.493s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/openarm_hand.xacro
+[3.494s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/openarm_hand_arguments.xacro
+[3.494s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/body
+[3.494s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/body/openarm_body.xacro
+[3.494s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/body/openarm_body_macro.xacro
+[3.494s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/robot
+[3.495s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/robot/openarm_robot.xacro
+[3.495s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/robot/v10.urdf.xacro
+[3.495s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config
+[3.495s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm
+[3.496s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10
+[3.496s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10/inertials.yaml
+[3.496s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10/joint_limits.yaml
+[3.497s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10/kinematics_link.yaml
+[3.497s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10/kinematics.yaml
+[3.497s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/arm/v10/kinematics_offset.yaml
+[3.498s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand
+[3.498s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand/openarm_hand
+[3.498s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand/openarm_hand/inertials.yaml
+[3.498s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand/openarm_hand/joint_limits.yaml
+[3.499s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand/openarm_hand/kinematics_link.yaml
+[3.499s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/hand/openarm_hand/kinematics.yaml
+[3.499s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/body
+[3.499s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/body/v10
+[3.500s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/body/v10/inertials.yaml
+[3.500s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/body/v10/kinematics_link.yaml
+[3.500s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/config/body/v10/kinematics.yaml
+[3.501s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/ament_index/resource_index/package_run_dependencies/openarm_description
+[3.502s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/ament_index/resource_index/parent_prefix_path/openarm_description
+[3.503s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/environment/ament_prefix_path.sh
+[3.503s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/environment/ament_prefix_path.dsv
+[3.504s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/environment/path.sh
+[3.504s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/environment/path.dsv
+[3.504s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/local_setup.bash
+[3.504s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/local_setup.sh
+[3.504s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/local_setup.zsh
+[3.505s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/local_setup.dsv
+[3.505s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/package.dsv
+[3.506s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/ament_index/resource_index/packages/openarm_description
+[3.506s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/cmake/openarm_descriptionConfig.cmake
+[3.507s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/cmake/openarm_descriptionConfig-version.cmake
+[3.507s] -- Installing: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/package.xml
+[3.507s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes
+[3.507s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm
+[3.507s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10
+[3.508s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual
+[3.508s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link0.dae
+[3.508s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link4.dae
+[3.508s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link5.dae
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link6.dae
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link7.dae
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link4.stl
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link6.stl
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link7.stl
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link2.dae
+[3.509s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link2.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link3.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link3.dae
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link1.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link5.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link0.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/visual/link1.dae
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link6_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link2_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link7_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link5_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link4_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link3_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link1_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/arm/v10/collision/link0_symp.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/hand.dae
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/finger.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/visual/finger.dae
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision/hand.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/ee/openarm_hand/collision/finger.stl
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body
+[3.510s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10
+[3.511s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual
+[3.511s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual/body_link0.stl
+[3.511s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/visual/body_link0.dae
+[3.511s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/collision
+[3.511s] -- Up-to-date: /home/yuan/arm_ws/install/openarm_description/share/openarm_description/meshes/body/v10/collision/body_link0_symp.stl
+[3.512s] Invoked command in '/home/yuan/arm_ws/build/openarm_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yuan/ros2_ws/install/turtle_practice:/home/yuan/ros2_ws/install/trajectory_server_pkg_py:/home/yuan/ros2_ws/install/trajectory_client_pkg_py:/home/yuan/ros2_ws/install/pubsubtst_pkg:/home/yuan/ros2_ws/install/learning_pkg:/opt/ros/humble /usr/bin/cmake --install /home/yuan/arm_ws/build/openarm_description

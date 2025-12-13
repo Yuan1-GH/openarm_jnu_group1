@@ -1,0 +1,22 @@
+[0.487s] Invoking command in '/home/yuan/arm_ws/src/arm': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/arm build --build-base /home/yuan/arm_ws/build/arm/build install --record /home/yuan/arm_ws/build/arm/install.log --single-version-externally-managed install_data
+[0.632s] running egg_info
+[0.632s] writing ../../build/arm/arm.egg-info/PKG-INFO
+[0.633s] writing dependency_links to ../../build/arm/arm.egg-info/dependency_links.txt
+[0.633s] writing entry points to ../../build/arm/arm.egg-info/entry_points.txt
+[0.633s] writing requirements to ../../build/arm/arm.egg-info/requires.txt
+[0.633s] writing top-level names to ../../build/arm/arm.egg-info/top_level.txt
+[0.634s] reading manifest file '../../build/arm/arm.egg-info/SOURCES.txt'
+[0.635s] writing manifest file '../../build/arm/arm.egg-info/SOURCES.txt'
+[0.635s] running build
+[0.635s] running build_py
+[0.635s] running install
+[0.635s] running install_lib
+[0.636s] running install_data
+[0.636s] copying arm/scene/scene.xml -> /home/yuan/arm_ws/install/arm/share/arm/scene
+[0.636s] running install_egg_info
+[0.638s] removing '/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm-0.0.1-py3.10.egg-info' (and everything under it)
+[0.639s] Copying ../../build/arm/arm.egg-info to /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm-0.0.1-py3.10.egg-info
+[0.640s] running install_scripts
+[0.653s] Installing sim_node script to /home/yuan/arm_ws/install/arm/lib/arm
+[0.653s] writing list of installed files to '/home/yuan/arm_ws/build/arm/install.log'
+[0.670s] Invoked command in '/home/yuan/arm_ws/src/arm' returned '0': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/arm build --build-base /home/yuan/arm_ws/build/arm/build install --record /home/yuan/arm_ws/build/arm/install.log --single-version-externally-managed install_data

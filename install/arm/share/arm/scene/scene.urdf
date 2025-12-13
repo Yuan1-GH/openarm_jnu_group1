@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<robot name="mujoco_scene">
+  <link name="world"/>
+
+  <link name="table_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.3 0.4 0.4"/>
+      </geometry>
+      <material name="wood">
+        <color rgba="0.8 0.6 0.4 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="world_to_table" type="fixed">
+    <parent link="world"/>
+    <child link="table_link"/>
+    <origin xyz="0.5 0 0.2" rpy="0 0 0"/>
+  </joint>
+
+  <link name="banana_link_urdf">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/> 
+      <geometry>
+        <mesh filename="http://localhost:8000/textured.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  
+  </robot>

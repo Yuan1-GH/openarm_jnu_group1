@@ -1,0 +1,45 @@
+[0.479s] Invoking command in '/home/yuan/arm_ws/build/arm': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/yuan/arm_ws/build/arm/build
+[0.654s] running develop
+[0.749s] Removing /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm.egg-link (link to .)
+[0.772s] Invoked command in '/home/yuan/arm_ws/build/arm' returned '0': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/yuan/arm_ws/build/arm/build
+[0.774s] Invoking command in '/home/yuan/arm_ws/src/arm': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/arm build --build-base /home/yuan/arm_ws/build/arm/build install --record /home/yuan/arm_ws/build/arm/install.log --single-version-externally-managed install_data --force
+[0.929s] running egg_info
+[0.929s] writing ../../build/arm/arm.egg-info/PKG-INFO
+[0.930s] writing dependency_links to ../../build/arm/arm.egg-info/dependency_links.txt
+[0.930s] writing entry points to ../../build/arm/arm.egg-info/entry_points.txt
+[0.930s] writing requirements to ../../build/arm/arm.egg-info/requires.txt
+[0.931s] writing top-level names to ../../build/arm/arm.egg-info/top_level.txt
+[0.932s] reading manifest file '../../build/arm/arm.egg-info/SOURCES.txt'
+[0.933s] writing manifest file '../../build/arm/arm.egg-info/SOURCES.txt'
+[0.933s] running build
+[0.934s] running build_py
+[0.934s] creating /home/yuan/arm_ws/build/arm/build
+[0.934s] creating /home/yuan/arm_ws/build/arm/build/lib
+[0.935s] creating /home/yuan/arm_ws/build/arm/build/lib/arm
+[0.936s] copying arm/__init__.py -> /home/yuan/arm_ws/build/arm/build/lib/arm
+[0.936s] running install
+[0.936s] running install_lib
+[0.937s] creating /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm
+[0.938s] copying /home/yuan/arm_ws/build/arm/build/lib/arm/__init__.py -> /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm
+[0.938s] byte-compiling /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm/__init__.py to __init__.cpython-310.pyc
+[0.939s] running install_data
+[0.939s] copying resource/arm -> /home/yuan/arm_ws/install/arm/share/ament_index/resource_index/packages
+[0.939s] copying package.xml -> /home/yuan/arm_ws/install/arm/share/arm
+[0.940s] creating /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.940s] copying arm/assets/011_banana/textured.dae -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.948s] copying arm/assets/011_banana/texture_map.png -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.956s] copying arm/assets/011_banana/nontextured.stl -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.959s] copying arm/assets/011_banana/nontextured.ply -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.963s] copying arm/assets/011_banana/textured.obj -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.965s] copying arm/assets/011_banana/textured.mtl -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.966s] copying arm/assets/011_banana/kinbody.xml -> /home/yuan/arm_ws/install/arm/share/arm/assets/011_banana
+[0.966s] creating /home/yuan/arm_ws/install/arm/share/arm/scene
+[0.967s] copying arm/scene/scene.xml -> /home/yuan/arm_ws/install/arm/share/arm/scene
+[0.967s] creating /home/yuan/arm_ws/install/arm/share/arm/config
+[0.967s] creating /home/yuan/arm_ws/install/arm/share/arm/launch
+[0.968s] running install_egg_info
+[0.969s] Copying ../../build/arm/arm.egg-info to /home/yuan/arm_ws/install/arm/lib/python3.10/site-packages/arm-0.0.1-py3.10.egg-info
+[0.971s] running install_scripts
+[0.986s] Installing sim_node script to /home/yuan/arm_ws/install/arm/lib/arm
+[0.987s] writing list of installed files to '/home/yuan/arm_ws/build/arm/install.log'
+[1.004s] Invoked command in '/home/yuan/arm_ws/src/arm' returned '0': PYTHONPATH=/home/yuan/arm_ws/build/arm/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yuan/arm_ws/install/arm/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/arm build --build-base /home/yuan/arm_ws/build/arm/build install --record /home/yuan/arm_ws/build/arm/install.log --single-version-externally-managed install_data --force
