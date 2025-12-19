@@ -1,3 +1,0 @@
-[console_scripts]
-sim_node = arm.scripts.sim_node:main
-

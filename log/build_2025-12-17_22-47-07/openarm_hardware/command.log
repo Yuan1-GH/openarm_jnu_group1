@@ -1,0 +1,6 @@
+Invoking command in '/home/yuan/arm_ws/build/openarm_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/yuan/arm_ws/src/openarm_ros2/openarm_hardware -DCMAKE_INSTALL_PREFIX=/home/yuan/arm_ws/install/openarm_hardware
+Invoked command in '/home/yuan/arm_ws/build/openarm_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/yuan/arm_ws/src/openarm_ros2/openarm_hardware -DCMAKE_INSTALL_PREFIX=/home/yuan/arm_ws/install/openarm_hardware
+Invoking command in '/home/yuan/arm_ws/build/openarm_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/yuan/arm_ws/build/openarm_hardware -- -j24 -l24
+Invoked command in '/home/yuan/arm_ws/build/openarm_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/yuan/arm_ws/build/openarm_hardware -- -j24 -l24
+Invoking command in '/home/yuan/arm_ws/build/openarm_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/yuan/arm_ws/build/openarm_hardware
+Invoked command in '/home/yuan/arm_ws/build/openarm_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/yuan/arm_ws/build/openarm_hardware
