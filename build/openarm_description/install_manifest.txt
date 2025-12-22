@@ -35,8 +35,6 @@
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/rviz/bimanual.rviz
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/arm/openarm_macro.xacro
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/arm/openarm_arm.xacro
-/home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ros2_control/openarm.bimanual.ros2_control.xacro
-/home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ros2_control/openarm.ros2_control.xacro
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/ee_with_one_link.xacro
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/openarm_hand_macro.xacro
 /home/yuan/arm_ws/install/openarm_description/share/openarm_description/urdf/ee/openarm_hand.xacro
