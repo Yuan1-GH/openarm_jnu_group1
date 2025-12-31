@@ -8,7 +8,7 @@ import numpy as np
 import sys
 
 # ---------------------------------------------------------
-MODEL_XML_PATH = "/home/yuan/arm_ws/src/openarm_mujoco/v1/openarm_bimanual.xml"
+MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
 # ---------------------------------------------------------
 
 class OpenArmMujocoBridge(Node):
