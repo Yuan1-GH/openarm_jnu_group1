@@ -14,7 +14,7 @@ import time
 
 # ================= 配置区域 =================
 # 感知模块输出的模拟坐标 (MuJoCo中的香蕉位置)
-TARGET_BANANA_POS = [0.5, 0.0, 0.45] 
+TARGET_BANANA_POS = [0.5, 0.0, 0.425] 
 # 抓取时的姿态 (四元数) - 假设手掌垂直向下 (根据OpenArm末端坐标系调整)
 # 这里假设末端Z轴朝前，需要绕Y轴转90度让Z轴朝下
 # 你可能需要根据实际手眼标定结果调整这里
@@ -71,7 +71,7 @@ def main():
     banana_co.primitive_poses = [PoseStamped().pose]
     banana_co.primitive_poses[0].position.x = 0.5
     banana_co.primitive_poses[0].position.y = 0.0
-    banana_co.primitive_poses[0].position.z = 0.45
+    banana_co.primitive_poses[0].position.z = 0.425
     banana_co.operation = CollisionObject.ADD
     
     collision_object_publisher.publish(banana_co)
