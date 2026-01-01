@@ -1,9 +1,0 @@
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/uninstall.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/openarm_bimanual_moveit_config_uninstall.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/test.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/edit_cache.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/rebuild_cache.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/list_install_components.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/install.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/install/local.dir
-/home/yuan/arm_ws/build/openarm_bimanual_moveit_config/CMakeFiles/install/strip.dir

@@ -1,9 +1,0 @@
-/home/yuan/arm_ws/build/openarm/CMakeFiles/uninstall.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/openarm_uninstall.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/test.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/edit_cache.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/rebuild_cache.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/list_install_components.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/install.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/install/local.dir
-/home/yuan/arm_ws/build/openarm/CMakeFiles/install/strip.dir

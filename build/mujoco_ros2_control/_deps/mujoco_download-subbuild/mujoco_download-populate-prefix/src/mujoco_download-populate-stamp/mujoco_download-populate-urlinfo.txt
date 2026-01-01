@@ -1,3 +1,0 @@
-repository='external project URL'
-module='https://github.com/google-deepmind/mujoco/releases/download/3.4.0/mujoco-3.4.0-linux-x86_64.tar.gz;DOWNLOAD_EXTRACT_TIMESTAMP;True'
-tag=''
