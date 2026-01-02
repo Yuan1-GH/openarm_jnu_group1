@@ -10,9 +10,14 @@ import sys
 # ---------------- 配置区域 ----------------
 MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
 
-# 夹爪 PD 参数（真实动力学模拟）
-KP_GRIPPER = 20
-KD_GRIPPER = 2
+# PD 参数调优
+# 核心修改：KP 从 20 改为 500。
+# 20 太软了，接近目标时力矩几乎为0，所以关不紧也关不快。
+KP_GRIPPER = 1000.0  
+KD_GRIPPER = 5.0    # 稍微增加阻尼，防止KP太大导致震荡
+
+# 模拟电机的最大力矩限制 (Nm)，防止飞出
+MAX_TORQUE = 5.0 
 # ----------------------------------------
 
 class OpenArmDynamicsBridge(Node):
@@ -28,9 +33,9 @@ class OpenArmDynamicsBridge(Node):
             sys.exit(1)
 
         # 2. 构建映射表
-        self.joint_qpos_map = {}  # 名字 -> qpos 地址
-        self.joint_qvel_map = {}  # 名字 -> qvel 地址
-        self.actuator_map = {}
+        self.joint_qpos_map = {} 
+        self.joint_qvel_map = {} 
+        self.actuator_map = {} 
         
         for i in range(self.model.njnt):
             name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, i)
@@ -43,32 +48,28 @@ class OpenArmDynamicsBridge(Node):
             joint_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, joint_id)
             if joint_name:
                 self.actuator_map[joint_name] = i
+                self.get_logger().info(f"发现执行器: {joint_name} (ID: {i})")
 
-        # 3. 初始化目标位置为当前位置
+        # 3. 初始化目标
         mujoco.mj_forward(self.model, self.data)
         self.target_positions = {}
-        for joint_name in self.actuator_map.keys():
-            if joint_name in self.joint_qpos_map:
-                q_addr = self.joint_qpos_map[joint_name]
-                self.target_positions[joint_name] = self.data.qpos[q_addr]
         
-        # 4. 分类关节：手臂关节（位置模拟）vs 夹爪关节（真实模拟）
-        self.arm_joints = []      # 手臂关节列表
-        self.gripper_joints = []  # 夹爪关节列表
+        # 4. 分类关节
+        self.arm_joints = []      
+        self.gripper_joints = []  
         
         for joint_name in self.joint_qpos_map.keys():
-            if "finger" in joint_name.lower():
+            if "finger" in joint_name.lower() or "gripper" in joint_name.lower():
                 self.gripper_joints.append(joint_name)
             else:
                 self.arm_joints.append(joint_name)
         
-        self.get_logger().info(f"手臂关节（位置模拟）: {len(self.arm_joints)} 个")
-        self.get_logger().info(f"夹爪关节（真实模拟）: {len(self.gripper_joints)} 个")
+        self.get_logger().info(f"手臂关节: {len(self.arm_joints)} | 夹爪关节: {len(self.gripper_joints)}")
 
         # 5. ROS 订阅
         self.create_subscription(JointState, 'joint_states', self.ros_cb, 10)
 
-        # 6. 图形界面
+        # 6. 图形界面初始化
         if not glfw.init(): sys.exit(1)
         self.window = glfw.create_window(1200, 900, "OpenArm Dynamics", None, None)
         glfw.make_context_current(self.window)
@@ -86,7 +87,6 @@ class OpenArmDynamicsBridge(Node):
         self.cam.azimuth = 90
         self.cam.elevation = -30
 
-        # 7. 物理循环
         self.create_timer(0.01, self.physics_loop)
 
     def ros_cb(self, msg):
@@ -99,19 +99,15 @@ class OpenArmDynamicsBridge(Node):
             rclpy.shutdown()
             return
 
-        # ========== 手臂部分：位置模拟（直接设置位置） ==========
+        # --- 手臂逻辑 (Kinematic 直接位置控制) ---
         for joint_name in self.arm_joints:
-            if joint_name not in self.target_positions:
-                continue
-            
-            qpos_addr = self.joint_qpos_map[joint_name]
-            qvel_addr = self.joint_qvel_map[joint_name]
-            
-            # 直接设置位置，速度清零（kinematic 模式）
-            self.data.qpos[qpos_addr] = self.target_positions[joint_name]
-            self.data.qvel[qvel_addr] = 0.0
+            if joint_name in self.target_positions:
+                qpos_addr = self.joint_qpos_map[joint_name]
+                qvel_addr = self.joint_qvel_map[joint_name]
+                self.data.qpos[qpos_addr] = self.target_positions[joint_name]
+                self.data.qvel[qvel_addr] = 0.0
 
-        # ========== 夹爪部分：真实动力学模拟（PD 控制） ==========
+        # --- 夹爪逻辑 (Dynamics 力矩/PD控制) ---
         for joint_name in self.gripper_joints:
             if joint_name not in self.target_positions:
                 continue
@@ -122,26 +118,29 @@ class OpenArmDynamicsBridge(Node):
             act_id = self.actuator_map[joint_name]
             target_q = self.target_positions[joint_name]
             
+            # 读取当前状态
             qpos_addr = self.joint_qpos_map[joint_name]
             qvel_addr = self.joint_qvel_map[joint_name]
-            
             current_q = self.data.qpos[qpos_addr]
             current_v = self.data.qvel[qvel_addr]
             
-            # 判断是否为位置执行器
-            is_position_actuator = "right_finger" in joint_name
+            # --- PD 控制计算 ---
+            error = target_q - current_q
             
-            if is_position_actuator:
-                # 位置执行器直接设置目标位置
-                self.data.ctrl[act_id] = target_q
-            else:
-                # 力矩执行器使用 PD 控制
-                error = target_q - current_q
-                torque = KP_GRIPPER * error - KD_GRIPPER * current_v
-                self.data.ctrl[act_id] = torque
-        
+            # 计算力矩: P项 + D项
+            torque = KP_GRIPPER * error - KD_GRIPPER * current_v
+            
+            # 力矩限幅 (Clamp)，防止数值爆炸
+            torque = np.clip(torque, -MAX_TORQUE, MAX_TORQUE)
+            
+            # 写入控制量
+            # 注意：如果你的XML里是<position> actuator，这个torque会被当作目标位置偏移
+            # 如果是<motor> actuator，这才是真正的力矩。
+            # 鉴于你说"无力"，说明你在用 motor 模式，或者 position gain 很小。
+            self.data.ctrl[act_id] = torque 
+
         # 物理步进
-        for _ in range(2):
+        for _ in range(5): 
             mujoco.mj_step(self.model, self.data)
 
         # 渲染
