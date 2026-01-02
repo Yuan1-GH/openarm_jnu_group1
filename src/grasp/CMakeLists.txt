@@ -32,8 +32,13 @@ ament_target_dependencies(simple_grasp_node
 )
 
 # --- 4. 安装规则 ---
+
 install(TARGETS simple_grasp_node
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
