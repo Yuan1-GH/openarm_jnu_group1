@@ -11,8 +11,8 @@ import sys
 MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
 
 # 夹爪 PD 参数（真实动力学模拟）
-KP_GRIPPER = 200
-KD_GRIPPER = 3
+KP_GRIPPER = 20
+KD_GRIPPER = 2
 # ----------------------------------------
 
 class OpenArmDynamicsBridge(Node):
