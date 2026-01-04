@@ -3,20 +3,15 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 import mujoco
-import glfw
+import mujoco.viewer  # 引入 viewer 模块
 import numpy as np
 import sys
+import time
 
 # ---------------- 配置区域 ----------------
 MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
-
-# PD 参数调优
-# 核心修改：KP 从 20 改为 500。
-# 20 太软了，接近目标时力矩几乎为0，所以关不紧也关不快。
 KP_GRIPPER = 1000.0  
-KD_GRIPPER = 5.0    # 稍微增加阻尼，防止KP太大导致震荡
-
-# 模拟电机的最大力矩限制 (Nm)，防止飞出
+KD_GRIPPER = 5.0    
 MAX_TORQUE = 5.0 
 # ----------------------------------------
 
@@ -32,7 +27,7 @@ class OpenArmDynamicsBridge(Node):
             self.get_logger().error(f"MuJoCo Load Error: {e}")
             sys.exit(1)
 
-        # 2. 构建映射表
+        # 2. 构建映射表 (保持原样)
         self.joint_qpos_map = {} 
         self.joint_qvel_map = {} 
         self.actuator_map = {} 
@@ -48,45 +43,41 @@ class OpenArmDynamicsBridge(Node):
             joint_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, joint_id)
             if joint_name:
                 self.actuator_map[joint_name] = i
-                self.get_logger().info(f"发现执行器: {joint_name} (ID: {i})")
 
         # 3. 初始化目标
         mujoco.mj_forward(self.model, self.data)
         self.target_positions = {}
         
-        # 4. 分类关节
+        # 4. 分类关节 (保持原样)
         self.arm_joints = []      
         self.gripper_joints = []  
-        
         for joint_name in self.joint_qpos_map.keys():
             if "finger" in joint_name.lower() or "gripper" in joint_name.lower():
                 self.gripper_joints.append(joint_name)
             else:
                 self.arm_joints.append(joint_name)
-        
-        self.get_logger().info(f"手臂关节: {len(self.arm_joints)} | 夹爪关节: {len(self.gripper_joints)}")
 
         # 5. ROS 订阅
         self.create_subscription(JointState, 'joint_states', self.ros_cb, 10)
 
-        # 6. 图形界面初始化
-        if not glfw.init(): sys.exit(1)
-        self.window = glfw.create_window(1200, 900, "OpenArm Dynamics", None, None)
-        glfw.make_context_current(self.window)
-        glfw.swap_interval(1)
+        # 6. 【关键修改】启动被动式 Viewer (带有原生调试界面)
+        # launch_passive 不会阻塞主线程，非常适合配合 ROS 的 spin
+        self.viewer = mujoco.viewer.launch_passive(
+            self.model, 
+            self.data, 
+            show_left_ui=True, 
+            show_right_ui=True
+        )
         
-        self.cam = mujoco.MjvCamera()
-        self.opt = mujoco.MjvOption()
-        mujoco.mjv_defaultCamera(self.cam)
-        mujoco.mjv_defaultOption(self.opt)
-        self.scene = mujoco.MjvScene(self.model, maxgeom=10000)
-        self.mjr_context = mujoco.MjrContext(self.model, mujoco.mjtFontScale.mjFONTSCALE_150.value)
-        
-        self.cam.lookat = np.array([0, 0, 0.5])
-        self.cam.distance = 2.0
-        self.cam.azimuth = 90
-        self.cam.elevation = -30
+        # 设置初始视角 (可选)
+        self.viewer.cam.lookat = np.array([0, 0, 0.5])
+        self.viewer.cam.distance = 2.0
+        self.viewer.cam.azimuth = 90
+        self.viewer.cam.elevation = -30
 
+        self.get_logger().info("MuJoCo Viewer 启动成功，调试界面已加载。")
+
+        # 启动物理循环定时器
         self.create_timer(0.01, self.physics_loop)
 
     def ros_cb(self, msg):
@@ -95,61 +86,43 @@ class OpenArmDynamicsBridge(Node):
                 self.target_positions[name] = pos
 
     def physics_loop(self):
-        if glfw.window_should_close(self.window):
+        # 检查 Viewer 是否被用户关闭
+        if not self.viewer.is_running():
+            self.get_logger().info("Viewer closed by user, shutting down...")
             rclpy.shutdown()
             return
 
-        # --- 手臂逻辑 (Kinematic 直接位置控制) ---
+        # --- 手臂逻辑 (Kinematic) ---
         for joint_name in self.arm_joints:
             if joint_name in self.target_positions:
                 qpos_addr = self.joint_qpos_map[joint_name]
-                qvel_addr = self.joint_qvel_map[joint_name]
+                # qvel_addr = self.joint_qvel_map[joint_name] # Kinematic 模式通常不需要强制设 vel 为 0，除非你想完全锁死
                 self.data.qpos[qpos_addr] = self.target_positions[joint_name]
-                self.data.qvel[qvel_addr] = 0.0
 
-        # --- 夹爪逻辑 (Dynamics 力矩/PD控制) ---
+        # --- 夹爪逻辑 (Dynamics PD) ---
         for joint_name in self.gripper_joints:
-            if joint_name not in self.target_positions:
+            if joint_name not in self.target_positions or joint_name not in self.actuator_map:
                 continue
             
-            if joint_name not in self.actuator_map:
-                continue
-                
             act_id = self.actuator_map[joint_name]
             target_q = self.target_positions[joint_name]
             
-            # 读取当前状态
             qpos_addr = self.joint_qpos_map[joint_name]
             qvel_addr = self.joint_qvel_map[joint_name]
             current_q = self.data.qpos[qpos_addr]
             current_v = self.data.qvel[qvel_addr]
             
-            # --- PD 控制计算 ---
             error = target_q - current_q
-            
-            # 计算力矩: P项 + D项
             torque = KP_GRIPPER * error - KD_GRIPPER * current_v
-            
-            # 力矩限幅 (Clamp)，防止数值爆炸
             torque = np.clip(torque, -MAX_TORQUE, MAX_TORQUE)
-            
-            # 写入控制量
-            # 注意：如果你的XML里是<position> actuator，这个torque会被当作目标位置偏移
-            # 如果是<motor> actuator，这才是真正的力矩。
-            # 鉴于你说"无力"，说明你在用 motor 模式，或者 position gain 很小。
             self.data.ctrl[act_id] = torque 
 
         # 物理步进
-        for _ in range(5): 
-            mujoco.mj_step(self.model, self.data)
+        mujoco.mj_step(self.model, self.data)
 
-        # 渲染
-        viewport = mujoco.MjrRect(0, 0, 1200, 900)
-        mujoco.mjv_updateScene(self.model, self.data, self.opt, None, self.cam, 
-                              mujoco.mjtCatBit.mjCAT_ALL.value, self.scene)
-        mujoco.mjr_render(viewport, self.scene, self.mjr_context)
-        glfw.swap_buffers(self.window)
-        glfw.poll_events()
+        # 【关键修改】同步 Viewer
+        # 这会把当前的 physics state 发送到 GUI 线程进行渲染
+        self.viewer.sync()
 
 def main():
     rclpy.init()
@@ -159,7 +132,9 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        glfw.terminate()
+        # 这里的清理也更简单了，只需要关闭 viewer
+        if hasattr(node, 'viewer'):
+            node.viewer.close()
         node.destroy_node()
 
 if __name__ == '__main__':

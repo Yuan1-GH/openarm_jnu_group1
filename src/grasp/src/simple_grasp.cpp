@@ -23,7 +23,7 @@
 // --- 用户配置区 ---
 const double TARGET_X = 0.3;
 const double TARGET_Y = 0.0;
-const double TARGET_Z = 0.59; // 抓取高度
+const double TARGET_Z = 0.62; 
 
 // 规划组名称
 static const std::string ARM_GROUP = "left_arm";
@@ -157,11 +157,11 @@ int main(int argc, char* argv[])
   } else {
     // 构建目标
     auto goal_msg = GripperCommand::Goal();
-    goal_msg.command.position = 0.02;
-    goal_msg.command.max_effort = 5.0;
+    goal_msg.command.position = 0.03;
+    goal_msg.command.max_effort = 500.0;
 
     // 发送目标
-    RCLCPP_INFO(node->get_logger(), "-> 发送抓取指令 (Pos: 0.01, Effort: 5.0)");
+    RCLCPP_INFO(node->get_logger(), "-> 发送抓取指令 ");
     auto goal_handle_future = gripper_action_client->async_send_goal(goal_msg);
 
     // 等待请求被接受
@@ -172,9 +172,9 @@ int main(int argc, char* argv[])
         if (!goal_handle) {
             RCLCPP_ERROR(node->get_logger(), "目标被服务器拒绝");
         } else {
-            RCLCPP_INFO(node->get_logger(), "-> 指令已发送，开始等待 30 秒以确保完全闭合...");
+            RCLCPP_INFO(node->get_logger(), "-> 指令已发送，开始等待以确保完全闭合...");
             // 强制等待 30 秒
-            std::this_thread::sleep_for(std::chrono::seconds(30));
+            std::this_thread::sleep_for(std::chrono::seconds(2));
         }
     }
   }
