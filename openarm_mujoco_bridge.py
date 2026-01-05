@@ -2,17 +2,24 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
+from std_srvs.srv import SetBool # 引入服务类型
 import mujoco
-import mujoco.viewer  # 引入 viewer 模块
+import mujoco.viewer
 import numpy as np
 import sys
-import time
+from scipy.spatial.transform import Rotation as R # 必须安装 scipy
 
 # ---------------- 配置区域 ----------------
 MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
 KP_GRIPPER = 1000.0  
 KD_GRIPPER = 5.0    
 MAX_TORQUE = 5.0 
+
+# !!! 必须与 XML 中的名称一致 !!!
+# 物体 Body 名称 (该 body 下必须有一个 type="free" 的 joint)
+TARGET_OBJECT_NAME = "banana" 
+# 夹爪末端 Body 名称 (将以此为基准计算相对位姿)
+GRIPPER_LINK_NAME = "openarm_left_hand" 
 # ----------------------------------------
 
 class OpenArmDynamicsBridge(Node):
@@ -27,7 +34,7 @@ class OpenArmDynamicsBridge(Node):
             self.get_logger().error(f"MuJoCo Load Error: {e}")
             sys.exit(1)
 
-        # 2. 构建映射表 (保持原样)
+        # 2. 构建关节和执行器映射
         self.joint_qpos_map = {} 
         self.joint_qvel_map = {} 
         self.actuator_map = {} 
@@ -44,11 +51,10 @@ class OpenArmDynamicsBridge(Node):
             if joint_name:
                 self.actuator_map[joint_name] = i
 
-        # 3. 初始化目标
+        # 3. 初始化控制相关变量
         mujoco.mj_forward(self.model, self.data)
         self.target_positions = {}
         
-        # 4. 分类关节 (保持原样)
         self.arm_joints = []      
         self.gripper_joints = []  
         for joint_name in self.joint_qpos_map.keys():
@@ -57,11 +63,43 @@ class OpenArmDynamicsBridge(Node):
             else:
                 self.arm_joints.append(joint_name)
 
-        # 5. ROS 订阅
-        self.create_subscription(JointState, 'joint_states', self.ros_cb, 10)
+        # 4. 获取物体 ID 用于物理绑定
+        self.obj_found = False
+        try:
+            # 找到物体的 Body ID
+            self.obj_body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, TARGET_OBJECT_NAME)
+            if self.obj_body_id == -1:
+                raise ValueError(f"Body {TARGET_OBJECT_NAME} not found")
+                
+            # 找到物体关联的 Free Joint (用于设置 qpos)
+            # body_jntadr[body_id] 返回该 body 下第一个 joint 的索引
+            self.obj_jnt_id = self.model.body_jntadr[self.obj_body_id]
+            if self.obj_jnt_id == -1:
+                raise ValueError(f"Body {TARGET_OBJECT_NAME} has no joint (must be a free joint)")
 
-        # 6. 【关键修改】启动被动式 Viewer (带有原生调试界面)
-        # launch_passive 不会阻塞主线程，非常适合配合 ROS 的 spin
+            self.obj_qpos_adr = self.model.jnt_qposadr[self.obj_jnt_id]
+            self.obj_vel_adr = self.model.jnt_dofadr[self.obj_jnt_id]
+            
+            # 找到夹爪的 Body ID
+            self.gripper_body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, GRIPPER_LINK_NAME)
+            if self.gripper_body_id == -1:
+                 raise ValueError(f"Gripper Body {GRIPPER_LINK_NAME} not found")
+
+            self.obj_found = True
+            self.get_logger().info(f"Target object '{TARGET_OBJECT_NAME}' initialized for physics attachment.")
+        except Exception as e:
+            self.get_logger().warn(f"Attachment setup failed: {e}. Simulation will run without object handling.")
+
+        # 5. ROS 接口
+        self.create_subscription(JointState, 'joint_states', self.ros_cb, 10)
+        
+        # 定义物理吸附服务
+        self.create_service(SetBool, '/mujoco_attach_object', self.attach_callback)
+        self.is_attached = False
+        self.rel_pos = None  # 相对位置
+        self.rel_quat = None # 相对旋转 (scipy Rotation object)
+
+        # 6. 启动 Viewer
         self.viewer = mujoco.viewer.launch_passive(
             self.model, 
             self.data, 
@@ -69,16 +107,54 @@ class OpenArmDynamicsBridge(Node):
             show_right_ui=True
         )
         
-        # 设置初始视角 (可选)
+        # 初始视角
         self.viewer.cam.lookat = np.array([0, 0, 0.5])
         self.viewer.cam.distance = 2.0
         self.viewer.cam.azimuth = 90
         self.viewer.cam.elevation = -30
 
-        self.get_logger().info("MuJoCo Viewer 启动成功，调试界面已加载。")
-
-        # 启动物理循环定时器
+        # 启动物理循环
         self.create_timer(0.01, self.physics_loop)
+
+    def attach_callback(self, request, response):
+        """ 服务回调：计算并锁定/解锁相对位姿 """
+        if not self.obj_found:
+            response.success = False
+            response.message = "Object setup failed on startup"
+            return response
+
+        if request.data: # 请求吸附
+            # 获取夹爪位姿 (World Frame)
+            g_pos = self.data.xpos[self.gripper_body_id]
+            g_quat = self.data.xquat[self.gripper_body_id] # [w, x, y, z]
+            
+            # 获取物体位姿 (World Frame, via qpos)
+            # qpos 的前7位: [x, y, z, w, x, y, z]
+            o_qpos = self.data.qpos[self.obj_qpos_adr : self.obj_qpos_adr+7]
+            o_pos = o_qpos[0:3]
+            o_quat = o_qpos[3:7] # [w, x, y, z]
+
+            # 转换为 Scipy Rotation 对象 (注意 scipy 使用 [x, y, z, w])
+            R_g = R.from_quat([g_quat[1], g_quat[2], g_quat[3], g_quat[0]])
+            R_o = R.from_quat([o_quat[1], o_quat[2], o_quat[3], o_quat[0]])
+
+            # 计算相对旋转: R_rel = R_g_inv * R_o
+            self.rel_quat = R_g.inv() * R_o
+
+            # 计算相对位置: P_rel = R_g_inv * (P_o - P_g)
+            # 相当于在夹爪坐标系看物体的位置
+            self.rel_pos = R_g.inv().apply(o_pos - g_pos)
+
+            self.is_attached = True
+            response.message = "Attached: Relative pose calculated"
+            self.get_logger().info("Object ATTACHED.")
+        else: # 请求释放
+            self.is_attached = False
+            response.message = "Detached"
+            self.get_logger().info("Object DETACHED.")
+            
+        response.success = True
+        return response
 
     def ros_cb(self, msg):
         for name, pos in zip(msg.name, msg.position):
@@ -86,42 +162,55 @@ class OpenArmDynamicsBridge(Node):
                 self.target_positions[name] = pos
 
     def physics_loop(self):
-        # 检查 Viewer 是否被用户关闭
         if not self.viewer.is_running():
-            self.get_logger().info("Viewer closed by user, shutting down...")
             rclpy.shutdown()
             return
 
-        # --- 手臂逻辑 (Kinematic) ---
+        # 1. 运动学控制：手臂
         for joint_name in self.arm_joints:
             if joint_name in self.target_positions:
                 qpos_addr = self.joint_qpos_map[joint_name]
-                # qvel_addr = self.joint_qvel_map[joint_name] # Kinematic 模式通常不需要强制设 vel 为 0，除非你想完全锁死
                 self.data.qpos[qpos_addr] = self.target_positions[joint_name]
 
-        # --- 夹爪逻辑 (Dynamics PD) ---
+        # 2. 动力学控制 (PD)：夹爪
         for joint_name in self.gripper_joints:
-            if joint_name not in self.target_positions or joint_name not in self.actuator_map:
-                continue
-            
-            act_id = self.actuator_map[joint_name]
-            target_q = self.target_positions[joint_name]
-            
-            qpos_addr = self.joint_qpos_map[joint_name]
-            qvel_addr = self.joint_qvel_map[joint_name]
-            current_q = self.data.qpos[qpos_addr]
-            current_v = self.data.qvel[qvel_addr]
-            
-            error = target_q - current_q
-            torque = KP_GRIPPER * error - KD_GRIPPER * current_v
-            torque = np.clip(torque, -MAX_TORQUE, MAX_TORQUE)
-            self.data.ctrl[act_id] = torque 
+            if joint_name in self.target_positions and joint_name in self.actuator_map:
+                act_id = self.actuator_map[joint_name]
+                target_q = self.target_positions[joint_name]
+                qpos_addr = self.joint_qpos_map[joint_name]
+                qvel_addr = self.joint_qvel_map[joint_name]
+                
+                curr_q = self.data.qpos[qpos_addr]
+                curr_v = self.data.qvel[qvel_addr]
+                
+                torque = KP_GRIPPER * (target_q - curr_q) - KD_GRIPPER * curr_v
+                torque = np.clip(torque, -MAX_TORQUE, MAX_TORQUE)
+                self.data.ctrl[act_id] = torque 
 
-        # 物理步进
+        # 3. 物理吸附逻辑
+        if self.is_attached and self.obj_found:
+            # 获取当前夹爪位姿
+            g_pos = self.data.xpos[self.gripper_body_id]
+            g_quat = self.data.xquat[self.gripper_body_id]
+            R_g = R.from_quat([g_quat[1], g_quat[2], g_quat[3], g_quat[0]])
+
+            # 计算新的物体位置: P_new = P_g + R_g * P_rel
+            new_o_pos = g_pos + R_g.apply(self.rel_pos)
+
+            # 计算新的物体旋转: R_new = R_g * R_rel
+            new_o_R = R_g * self.rel_quat
+            new_o_quat = new_o_R.as_quat() # 返回 [x, y, z, w]
+
+            # 强制覆盖物体 qpos
+            # 位置
+            self.data.qpos[self.obj_qpos_adr : self.obj_qpos_adr+3] = new_o_pos
+            # 四元数 (MuJoCo 需要 w, x, y, z)
+            self.data.qpos[self.obj_qpos_adr+3 : self.obj_qpos_adr+7] = [new_o_quat[3], new_o_quat[0], new_o_quat[1], new_o_quat[2]]
+
+            # 消除速度，防止物理引擎产生爆炸性反作用力
+            self.data.qvel[self.obj_vel_adr : self.obj_vel_adr+6] = 0.0
+
         mujoco.mj_step(self.model, self.data)
-
-        # 【关键修改】同步 Viewer
-        # 这会把当前的 physics state 发送到 GUI 线程进行渲染
         self.viewer.sync()
 
 def main():
@@ -132,7 +221,6 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        # 这里的清理也更简单了，只需要关闭 viewer
         if hasattr(node, 'viewer'):
             node.viewer.close()
         node.destroy_node()

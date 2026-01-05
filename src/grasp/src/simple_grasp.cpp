@@ -8,6 +8,8 @@
 #include <rclcpp/rclcpp.hpp>
 // ROS 2 Action 支持
 #include <rclcpp_action/rclcpp_action.hpp>
+// 服务类型
+#include <std_srvs/srv/set_bool.hpp>
 // 夹爪控制消息类型
 #include <control_msgs/action/gripper_command.hpp>
 
@@ -31,7 +33,7 @@ static const std::string GRIPPER_GROUP = "left_gripper";
 
 // 关键名称
 static const std::string EE_LINK_NAME = "openarm_left_hand"; 
-static const std::string OBJECT_ID = "banana_collision";
+static const std::string OBJECT_ID = "banana_collision"; // MoveIt 中的碰撞体ID
 
 // 辅助高度
 const double PRE_GRASP_HEIGHT = 0.15; 
@@ -47,7 +49,7 @@ int main(int argc, char* argv[])
   executor.add_node(node);
   std::thread([&executor]() { executor.spin(); }).detach();
 
-  RCLCPP_INFO(node->get_logger(), "========== 纯 MoveIt 抓取任务开始 (Action版) ==========");
+  RCLCPP_INFO(node->get_logger(), "========== MoveIt + MuJoCo 联合抓取任务开始 ==========");
 
   // 2. 初始化 MoveIt 接口
   auto arm_group = moveit::planning_interface::MoveGroupInterface(node, ARM_GROUP);
@@ -59,6 +61,9 @@ int main(int argc, char* argv[])
   arm_group.setMaxAccelerationScalingFactor(0.3);
   arm_group.setPlanningTime(5.0); 
   arm_group.setGoalPositionTolerance(0.01);
+
+  // 初始化 MuJoCo 物理吸附服务客户端
+  auto mujoco_client = node->create_client<std_srvs::srv::SetBool>("/mujoco_attach_object");
 
   // ==========================================================
   // 阶段 I: 移动到预抓取点 (Pre-Grasp)
@@ -106,10 +111,8 @@ int main(int argc, char* argv[])
   }
   
   if (!gripper_opened) {
-      RCLCPP_WARN(node->get_logger(), "-> 未找到命名状态，尝试手动设置关节值...");
       auto joint_names = gripper_group.getRobotModel()->getJointModelGroup(GRIPPER_GROUP)->getActiveJointModelNames();
       std::vector<double> joint_values(joint_names.size(), 0.04); 
-      
       gripper_group.setJointValueTarget(joint_values);
       gripper_group.move();
   }
@@ -138,57 +141,63 @@ int main(int argc, char* argv[])
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   // ==========================================================
-  // 阶段 IV: 闭合夹爪 (Grasp) - 使用 Action Client
+  // 阶段 IV: 闭合夹爪 (Grasp) - Action Client
   // ==========================================================
-  RCLCPP_INFO(node->get_logger(), "[Step 4] 通过 Action 闭合夹爪...");
+  RCLCPP_INFO(node->get_logger(), "[Step 4] 闭合夹爪...");
 
-  // 定义 Action 类型别名 (只定义 Action 消息类型)
   using GripperCommand = control_msgs::action::GripperCommand;
-  // 注意：这里不需要定义 ClientT，直接在 create_client 中使用 GripperCommand
-
-  // 创建 Action Client
-  // 【关键修改】这里模板参数必须是 GripperCommand，不能是 Client<GripperCommand>
   auto gripper_action_client = rclcpp_action::create_client<GripperCommand>(node, "/left_gripper_controller/gripper_cmd");
 
-  // 等待 Action Server 上线
-  RCLCPP_INFO(node->get_logger(), "-> 等待夹爪 Action Server...");
   if (!gripper_action_client->wait_for_action_server(std::chrono::seconds(5))) {
     RCLCPP_ERROR(node->get_logger(), "Action server 不可用！");
   } else {
-    // 构建目标
     auto goal_msg = GripperCommand::Goal();
-    goal_msg.command.position = 0.03;
+    goal_msg.command.position = 0.015; // 稍微闭紧一点以确保接触
     goal_msg.command.max_effort = 500.0;
 
-    // 发送目标
-    RCLCPP_INFO(node->get_logger(), "-> 发送抓取指令 ");
     auto goal_handle_future = gripper_action_client->async_send_goal(goal_msg);
 
-    // 等待请求被接受
-    if (goal_handle_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
-        RCLCPP_ERROR(node->get_logger(), "发送目标超时");
-    } else {
+    if (goal_handle_future.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
         auto goal_handle = goal_handle_future.get();
-        if (!goal_handle) {
-            RCLCPP_ERROR(node->get_logger(), "目标被服务器拒绝");
-        } else {
-            RCLCPP_INFO(node->get_logger(), "-> 指令已发送，开始等待以确保完全闭合...");
-            // 强制等待 30 秒
+        if (goal_handle) {
+            RCLCPP_INFO(node->get_logger(), "-> 抓取指令已发送，等待动作完成...");
             std::this_thread::sleep_for(std::chrono::seconds(2));
         }
     }
   }
 
-  // 逻辑处理：Attach 物体到末端
+  // ==========================================================
+  // 逻辑 + 物理 双重吸附
+  // ==========================================================
+  
+  // 1. MoveIt 逻辑吸附 (用于防碰撞)
   moveit_msgs::msg::AttachedCollisionObject attached_object;
   attached_object.link_name = EE_LINK_NAME;   
   attached_object.object.header.frame_id = "world"; 
   attached_object.object.id = OBJECT_ID;
   attached_object.object.operation = attached_object.object.ADD;
-  
   planning_scene_interface.applyAttachedCollisionObject(attached_object);
-  RCLCPP_INFO(node->get_logger(), "-> 物体已在逻辑上吸附至末端");
-  
+  RCLCPP_INFO(node->get_logger(), "-> [MoveIt] 逻辑吸附完成");
+
+  // 2. MuJoCo 物理吸附 (用于视觉仿真)
+  if (mujoco_client->wait_for_service(std::chrono::seconds(2))) {
+      auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+      request->data = true; // True = Attach
+
+      auto future = mujoco_client->async_send_request(request);
+      // 等待服务返回结果
+      if (future.wait_for(std::chrono::seconds(2)) == std::future_status::ready) {
+           auto result = future.get();
+           if(result->success) {
+               RCLCPP_INFO(node->get_logger(), "-> [MuJoCo] 物理吸附成功: %s", result->message.c_str());
+           } else {
+               RCLCPP_ERROR(node->get_logger(), "-> [MuJoCo] 物理吸附失败: %s", result->message.c_str());
+           }
+      }
+  } else {
+      RCLCPP_WARN(node->get_logger(), "-> [MuJoCo] 服务未在线，无法执行物理吸附");
+  }
+
   // ==========================================================
   // 阶段 V: 直线提升 (Lift)
   // ==========================================================
@@ -205,7 +214,7 @@ int main(int argc, char* argv[])
 
   if (fraction > 0.5) {
       arm_group.execute(trajectory_up);
-      RCLCPP_INFO(node->get_logger(), "========== 抓取任务圆满完成 ==========");
+      RCLCPP_INFO(node->get_logger(), "========== 任务完成 ==========");
   } else {
       RCLCPP_ERROR(node->get_logger(), "提升规划失败");
   }
