@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, Image, CameraInfo
 from std_srvs.srv import SetBool # 引入服务类型
 import mujoco
 import mujoco.viewer
 import numpy as np
 import sys
 from scipy.spatial.transform import Rotation as R # 必须安装 scipy
+import cv2 # 用于图像编码 (如果不需要 ROS cv_bridge)
 
 # ---------------- 配置区域 ----------------
 MODEL_XML_PATH = "src/openarm_mujoco/v1/openarm_bimanual.xml"
@@ -20,6 +21,11 @@ MAX_TORQUE = 5.0
 TARGET_OBJECT_NAME = "banana" 
 # 夹爪末端 Body 名称 (将以此为基准计算相对位姿)
 GRIPPER_LINK_NAME = "openarm_left_hand" 
+
+# 相机配置
+CAMERA_NAME = "chest_camera"
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
 # ----------------------------------------
 
 class OpenArmDynamicsBridge(Node):
@@ -98,6 +104,24 @@ class OpenArmDynamicsBridge(Node):
         self.is_attached = False
         self.rel_pos = None  # 相对位置
         self.rel_quat = None # 相对旋转 (scipy Rotation object)
+
+        # --- 相机发布初始化 ---
+        self.img_pub = self.create_publisher(Image, '/camera/image_raw', 10)
+        self.info_pub = self.create_publisher(CameraInfo, '/camera/camera_info', 10)
+        
+        # 初始化 Offscreen Renderer
+        self.renderer = mujoco.Renderer(self.model, height=IMG_HEIGHT, width=IMG_WIDTH)
+        self.camera_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, CAMERA_NAME)
+        
+        # 预计算内参 (assuming fov=58 in height)
+        fovy = 58.0
+        f = (IMG_HEIGHT / 2.0) / np.tan(np.deg2rad(fovy / 2.0))
+        self.camera_info = CameraInfo()
+        self.camera_info.header.frame_id = "camera_link_optical" # 虚拟frame
+        self.camera_info.width = IMG_WIDTH
+        self.camera_info.height = IMG_HEIGHT
+        self.camera_info.k = [f, 0.0, IMG_WIDTH/2.0, 0.0, f, IMG_HEIGHT/2.0, 0.0, 0.0, 1.0]
+        self.camera_info.p = [f, 0.0, IMG_WIDTH/2.0, 0.0, 0.0, f, IMG_HEIGHT/2.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
         # 6. 启动 Viewer
         self.viewer = mujoco.viewer.launch_passive(
@@ -212,6 +236,29 @@ class OpenArmDynamicsBridge(Node):
 
         mujoco.mj_step(self.model, self.data)
         self.viewer.sync()
+
+        # 4. 图像渲染与发布 (每10次循环发布一次，即 10Hz)
+        # 注意：过于频繁的渲染会显著降低仿真速度
+        # 这里为了演示，简单地每次循环都尝试（可能会卡），实际应降频
+        if int(self.data.time * 100) % 10 == 0: 
+            self.renderer.update_scene(self.data, camera=self.camera_id)
+            img = self.renderer.render() # Returns rgb numpy array
+            
+            # 构造 ROS 消息
+            msg = Image()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = "camera_link_optical"
+            msg.height = IMG_HEIGHT
+            msg.width = IMG_WIDTH
+            msg.encoding = "rgb8"
+            msg.is_bigendian = 0
+            msg.step = 3 * IMG_WIDTH
+            msg.data = img.tobytes()
+            
+            self.camera_info.header = msg.header
+            
+            self.img_pub.publish(msg)
+            self.info_pub.publish(self.camera_info)
 
 def main():
     rclpy.init()
