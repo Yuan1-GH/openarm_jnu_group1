@@ -5,17 +5,20 @@ from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import PoseStamped
 import cv2
 import numpy as np
-import tf_transformations
+import message_filters # Need to sync rgb and depth
 
 class SimplePerceptionNode(Node):
     def __init__(self):
         super().__init__('simple_perception_node')
         
-        self.declare_parameter('target_z_height', 0.45) # 香蕉的大致中心高度
-        self.target_z = self.get_parameter('target_z_height').value
+        # 订阅图像 (RGB & Depth) 使用 ApproximateTimeSynchronizer
+        self.img_sub = message_filters.Subscriber(self, Image, '/camera/image_raw')
+        self.depth_sub = message_filters.Subscriber(self, Image, '/camera/depth_image')
+        
+        # Increase slop to 1.0s to tolerate jitter in simulation time vs wall time
+        self.ts = message_filters.ApproximateTimeSynchronizer([self.img_sub, self.depth_sub], 10, 1.0)
+        self.ts.registerCallback(self.sync_cb)
 
-        # 订阅图像
-        self.img_sub = self.create_subscription(Image, '/camera/image_raw', self.img_cb, 10)
         self.info_sub = self.create_subscription(CameraInfo, '/camera/camera_info', self.info_cb, 10)
         
         # 发布位姿
@@ -62,34 +65,48 @@ class SimplePerceptionNode(Node):
         
         self.T_wc_cv = self.T_wc @ R_gl_cv
         
-        self.get_logger().info("Perception Node Started. Waiting for images...")
+        self.get_logger().info("Perception Node Started. Waiting for RGB-D images...")
 
     def info_cb(self, msg):
         if self.camera_K is None:
             self.camera_K = np.array(msg.k).reshape(3, 3)
             self.get_logger().info(f"Camera Info Received: K=\n{self.camera_K}")
 
-    def img_cb(self, msg):
+    def sync_cb(self, rgb_msg, depth_msg):
+        # self.get_logger().info("Sync callback triggered") 
         if self.camera_K is None:
+            self.get_logger().warn("Skipping sync_cb: Camera Info not yet received")
             return
 
-        # 1. 转换图像
-        # 假设 encoding="rgb8"
-        img = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, 3)
-        # RGB -> BGR for OpenCV
-        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        # 1. 转换 RGB 图像
+        img = np.frombuffer(rgb_msg.data, dtype=np.uint8).reshape(rgb_msg.height, rgb_msg.width, 3)
+        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) # For visualization/OpenCV
+
+        # 2. 转换 Depth 图像 (32FC1)
+        depth_img = np.frombuffer(depth_msg.data, dtype=np.float32).reshape(depth_msg.height, depth_msg.width)
+
+        # --- Visualization Change: Show Depth instead of Raw RGB ---
+        # Normalize depth for display (0.0m to 2.0m -> 0-255)
+        depth_vis = np.clip(depth_img, 0.0, 3.0) # Clip at 3m
+        depth_vis = cv2.normalize(depth_vis, None, 0, 255, cv2.NORM_MINMAX)
+        depth_vis = depth_vis.astype(np.uint8)
+        depth_vis = cv2.applyColorMap(depth_vis, cv2.COLORMAP_JET)
         
-        # 2. 颜色识别 (黄色香蕉)
+        cv2.imshow("Depth View", depth_vis)
+        # -----------------------------------------------------------
+
+        # 3. 颜色识别 (黄色香蕉)
         hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
-        # 黄色范围 (OpenCV H: 0-180)
         lower_yellow = np.array([20, 100, 100])
         upper_yellow = np.array([40, 255, 255])
         
         mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
         
-        # 3. 找轮廓
+        # 4. 找轮廓
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
+        detection_img = img_bgr.copy() # Canvas for detection visualization
+
         if contours:
             c = max(contours, key=cv2.contourArea)
             M = cv2.moments(c)
@@ -97,54 +114,67 @@ class SimplePerceptionNode(Node):
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
                 
-                # 画图调试
-                cv2.drawContours(img_bgr, [c], -1, (0, 255, 0), 2)
-                cv2.circle(img_bgr, (cx, cy), 5, (0, 0, 255), -1)
+                # 画图调试 (Separate Window 2)
+                cv2.drawContours(detection_img, [c], -1, (0, 255, 0), 2)
+                cv2.circle(detection_img, (cx, cy), 5, (0, 0, 255), -1)
                 
-                # 4. 2D -> 3D 投影 (Ray Casting)
-                # 像素坐标 (u, v) -> 归一化平面 (x, y, 1)
-                # P_cam = K_inv * [u, v, 1] * depth
+                # --- Depth-Based Position Estimation ---
                 
-                uv_hom = np.array([cx, cy, 1.0])
-                K_inv = np.linalg.inv(self.camera_K)
-                ray_cam = K_inv @ uv_hom # 射线方向 (在相机坐标系下)
-                
-                # 转换到世界坐标系方向
-                # ray_world = R_wc_cv * ray_cam
-                ray_world = self.T_wc_cv[:3, :3] @ ray_cam
-                
-                # 相机中心 (世界坐标)
-                cam_origin = self.T_wc_cv[:3, 3]
-                
-                # 射线方程: P = O + t * D
-                # 我们知道目标 Z = target_z
-                # P.z = O.z + t * D.z => target_z = O.z + t * D.z
-                # t = (target_z - O.z) / D.z
-                
-                if abs(ray_world[2]) > 1e-6:
-                    t = (self.target_z - cam_origin[2]) / ray_world[2]
+                # 获取该像素点的深度值 (Meters)
+                # 注意边界检查
+                if 0 <= cy < depth_img.shape[0] and 0 <= cx < depth_img.shape[1]:
+                    z_val = depth_img[cy, cx]
+                    self.get_logger().info(f"Center ({cx},{cy}) Depth: {z_val:.4f} m")
                     
-                    if t > 0: # 物体在相机前方
-                        p_world = cam_origin + t * ray_world
+                    if z_val > 0.1 and z_val < 5.0: # Valid depth range check
+                        # 反投影 (De-projection)
+                        # P_cam = Z * K_inv * [u, v, 1]
+                        
+                        fx = self.camera_K[0, 0]
+                        fy = self.camera_K[1, 1]
+                        cx_opt = self.camera_K[0, 2]
+                        cy_opt = self.camera_K[1, 2]
+                        
+                        # Z is depth (forward axis in OpenCV frame)
+                        Z = z_val
+                        X = (cx - cx_opt) * Z / fx
+                        Y = (cy - cy_opt) * Z / fy
+                        
+                        P_cam = np.array([X, Y, Z, 1.0])
+                        
+                        # Transform to World Frame
+                        # P_world = T_wc_cv * P_cam
+                        P_world = self.T_wc_cv @ P_cam
                         
                         # 发布 Pose
                         pose_msg = PoseStamped()
                         pose_msg.header.stamp = self.get_clock().now().to_msg()
                         pose_msg.header.frame_id = "world"
-                        pose_msg.pose.position.x = p_world[0]
-                        pose_msg.pose.position.y = p_world[1]
-                        pose_msg.pose.position.z = p_world[2]
-                        # 保持默认朝向 (或者根据物体主轴计算，这里简化)
+                        pose_msg.pose.position.x = P_world[0]
+                        pose_msg.pose.position.y = P_world[1]
+                        pose_msg.pose.position.z = P_world[2]
                         pose_msg.pose.orientation.w = 1.0
                         
                         self.pose_pub.publish(pose_msg)
-                        # self.get_logger().info(f"Detected at: {p_world}")
+                        
+                        # 在图像上显示深度信息
+                        cv2.putText(detection_img, f"Z: {Z:.3f}m", (cx + 10, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+        # 显示识别结果 (Separate Window 2)
+        cv2.imshow("Object Detection", detection_img)
+        cv2.waitKey(1)
 
 def main():
     rclpy.init()
     node = SimplePerceptionNode()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        cv2.destroyAllWindows()
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

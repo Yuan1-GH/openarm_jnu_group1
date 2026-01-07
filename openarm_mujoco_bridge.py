@@ -107,6 +107,7 @@ class OpenArmDynamicsBridge(Node):
 
         # --- 相机发布初始化 ---
         self.img_pub = self.create_publisher(Image, '/camera/image_raw', 10)
+        self.depth_pub = self.create_publisher(Image, '/camera/depth_image', 10)
         self.info_pub = self.create_publisher(CameraInfo, '/camera/camera_info', 10)
         
         # 初始化 Offscreen Renderer
@@ -123,6 +124,12 @@ class OpenArmDynamicsBridge(Node):
         self.camera_info.k = [f, 0.0, IMG_WIDTH/2.0, 0.0, f, IMG_HEIGHT/2.0, 0.0, 0.0, 1.0]
         self.camera_info.p = [f, 0.0, IMG_WIDTH/2.0, 0.0, 0.0, f, IMG_HEIGHT/2.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
+        # --- Depth Precision Fix ---
+        # Default znear(0.01) and zfar(50+) cause massive precision loss at 1m.
+        # Set tighter bounds for manipulation task.
+        self.model.vis.map.znear = 0.1
+        self.model.vis.map.zfar = 10.0
+        
         # 6. 启动 Viewer
         self.viewer = mujoco.viewer.launch_passive(
             self.model, 
@@ -138,6 +145,7 @@ class OpenArmDynamicsBridge(Node):
         self.viewer.cam.elevation = -30
 
         # 启动物理循环
+        self.loop_count = 0
         self.create_timer(0.01, self.physics_loop)
 
     def attach_callback(self, request, response):
@@ -236,17 +244,52 @@ class OpenArmDynamicsBridge(Node):
 
         mujoco.mj_step(self.model, self.data)
         self.viewer.sync()
+        
+        self.loop_count += 1
 
         # 4. 图像渲染与发布 (每10次循环发布一次，即 10Hz)
-        # 注意：过于频繁的渲染会显著降低仿真速度
-        # 这里为了演示，简单地每次循环都尝试（可能会卡），实际应降频
-        if int(self.data.time * 100) % 10 == 0: 
+        if self.loop_count % 10 == 0: 
+            # --- Depth Rendering ---
+            self.renderer.enable_depth_rendering()
+            self.renderer.update_scene(self.data, camera=self.camera_id)
+            depth_buffer = self.renderer.render() # Returns float32 numpy array (0-1 typically)
+            
+            # Retrieve clipping planes (Modified in __init__ for precision)
+            extent = self.model.stat.extent
+            znear = self.model.vis.map.znear * extent
+            zfar = self.model.vis.map.zfar * extent
+
+            # Debug: Log raw buffer stats every 1s
+            if self.loop_count % 100 == 0:
+                raw_min = np.nanmin(depth_buffer)
+                raw_max = np.nanmax(depth_buffer)
+                self.get_logger().info(f"RAW Depth Buffer -> Min: {raw_min:.4f}, Max: {raw_max:.4f} (znear={znear:.2f}, zfar={zfar:.2f})")
+
+            # Linearize Depth (OpenGL Z-buffer to Meters)
+            # z_n = 2.0 * depth_buffer - 1.0
+            z_n = 2.0 * depth_buffer - 1.0
+            depth_meters = 2.0 * znear * zfar / (zfar + znear - z_n * (zfar - znear))
+            
+            # Construct Depth Message
+            d_msg = Image()
+            d_msg.header.stamp = self.get_clock().now().to_msg()
+            d_msg.header.frame_id = "camera_link_optical"
+            d_msg.height = IMG_HEIGHT
+            d_msg.width = IMG_WIDTH
+            d_msg.encoding = "32FC1"
+            d_msg.is_bigendian = 0
+            d_msg.step = 4 * IMG_WIDTH
+            d_msg.data = depth_meters.astype(np.float32).tobytes()
+            self.depth_pub.publish(d_msg)
+
+            # --- RGB Rendering ---
+            self.renderer.disable_depth_rendering()
             self.renderer.update_scene(self.data, camera=self.camera_id)
             img = self.renderer.render() # Returns rgb numpy array
             
             # 构造 ROS 消息
             msg = Image()
-            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.stamp = d_msg.header.stamp # Sync timestamp
             msg.header.frame_id = "camera_link_optical"
             msg.height = IMG_HEIGHT
             msg.width = IMG_WIDTH
