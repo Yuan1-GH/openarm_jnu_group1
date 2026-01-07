@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
   // Old logic: Target Z = 0.62. 
   // If object is at 0.425. Offset is ~0.2m.
   // So let's add 0.2m to the detected Z.
-  target_z = target_pose.position.z + 0.175; 
+  target_z = target_pose.position.z + 0.16; 
 
   RCLCPP_INFO(node->get_logger(), "最终抓取目标 (Wrist): [%.3f, %.3f, %.3f]", target_x, target_y, target_z);
 
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
         auto goal_handle = goal_handle_future.get();
         if (goal_handle) {
             RCLCPP_INFO(node->get_logger(), "-> 抓取指令已发送，等待动作完成...");
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::seconds(6));
         }
     }
   }
